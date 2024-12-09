@@ -1,6 +1,7 @@
 from typing import Tuple, List
 import numpy as np
-
+from pyglet.shapes import Circle
+    
 class Ball:
     """A ball class representing a moving circular object in a game.
     
@@ -38,7 +39,7 @@ class Ball:
         Args:
             dt (float): Time step delta
         """
-        self.acc += self.jerk * dt
+        self.acc = np.add(self.acc, np.multiply(self.jerk, dt))
         # Prevent negative acceleration
         if self.acc[0] < 0:
             self.acc[0] = 0
@@ -51,7 +52,7 @@ class Ball:
         Args:
             dt (float): Time step delta
         """
-        self.vel += self.acc * dt
+        self.vel = np.add(self.vel, np.multiply(self.acc, dt))
         
     def update_position(self, dt: float):
         """Update ball position based on velocity.
@@ -59,7 +60,7 @@ class Ball:
         Args:
             dt (float): Time step delta
         """
-        self.pos += self.vel * dt
+        self.pos = np.add(self.pos, np.multiply(self.vel, dt))
         
     def update(self, dt: float):
         """Update ball physics (acceleration, velocity, position).
@@ -70,18 +71,6 @@ class Ball:
         self.update_acceleration(dt)
         self.update_velocity(dt)
         self.update_position(dt)
-
-    def intersect_bounds(self, width: int):
-        """Handle ball collision with screen boundaries.
-        
-        When the ball hits a boundary, it bounces by reversing velocity.
-
-        Args:
-            width (int): Screen width
-        """
-        if self.pos[0] < 0 or self.pos[0] > width:
-            self.vel[0] = -self.vel[0]
-            self.acc[0] = 0
-        if self.pos[1] < 0:
-            self.vel[1] = -self.vel[1]
-            self.acc[1] = 0
+            
+    def to_pyglet(self) -> Circle:
+        return Circle(self.pos[0], self.pos[1], self.radius, color=self.color)
