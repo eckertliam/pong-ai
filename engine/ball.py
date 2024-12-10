@@ -12,10 +12,12 @@ class Ball:
         pos (np.ndarray): 2D position vector [x, y]
         vel (np.ndarray): 2D velocity vector [vx, vy]
         acc (np.ndarray): 2D acceleration vector [ax, ay]
-        jerk (np.float64): Rate of change of acceleration (negative value causes deceleration)
+        jerk (const np.float64): Rate of change of acceleration (negative value causes deceleration)
         color (Tuple[int, int, int]): RGB color tuple
     """
 
+    jerk: np.float64 = np.float64(-1)
+    
     def __init__(self, radius: float, x: float, y: float, vel: Tuple[float, float], color: Tuple[int, int, int]):
         """Initialize a ball with given position, velocity, and appearance.
 
@@ -30,7 +32,6 @@ class Ball:
         self.pos = np.array([x, y])
         self.vel = np.array(vel)
         self.acc = np.array([0, 0])
-        self.jerk = np.float64(-1)
         self.color = color
 
     def update_acceleration(self, dt: float):

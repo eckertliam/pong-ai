@@ -12,11 +12,13 @@ class Paddle:
         pos (np.ndarray): 2D position vector [x, y]
         vel (np.ndarray): 2D velocity vector [vx, vy]
         acc (np.ndarray): 2D acceleration vector [ax, ay]
-        jerk (np.float64): Rate of change of acceleration (negative value causes deceleration)
+        jerk (const np.float64): Rate of change of acceleration (negative value causes deceleration)
         width (float): Width of the paddle
         height (float): Height of the paddle
         color (Tuple[int, int, int]): RGB color tuple
     """
+    
+    jerk: np.float64 = np.float64(-1)
 
     def __init__(self, x: float, y: float, width: float, height: float, color: Tuple[int, int, int]):
         """Initialize a paddle with given position and dimensions.
@@ -31,7 +33,6 @@ class Paddle:
         self.pos = np.array([x, y])
         self.vel = np.array([0, 0])
         self.acc = np.array([0, 0])
-        self.jerk = np.float64(-1)
         self.width = width
         self.height = height
         self.color = color
