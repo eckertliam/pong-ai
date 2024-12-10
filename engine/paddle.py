@@ -16,6 +16,10 @@ class Paddle:
         width (float): Width of the paddle
         height (float): Height of the paddle
         color (Tuple[int, int, int]): RGB color tuple
+        max_acc (np.float64): Maximum acceleration
+        min_acc (np.float64): Minimum acceleration
+        max_vel (np.float64): Maximum velocity
+        min_vel (np.float64): Minimum velocity
     """
 
     def __init__(self, x: float, y: float, width: float, height: float, color: Tuple[int, int, int], max_acc: float, min_acc: float, max_vel: float, min_vel: float, decel_rate: float):

@@ -100,8 +100,13 @@ class Engine:
             radius=10,
             x=self.screen_width/2,
             y=self.screen_height/2,
-            vel=(100, 2),
-            color=(255, 105, 180)
+            vel=(-750, 5),
+            color=(255, 105, 180),
+            max_acc=100,
+            min_acc=-100,
+            max_vel=750,
+            min_vel=-750,
+            decel_rate=50
         )
         paddle_width = self.screen_width / 25
         paddle_height = self.screen_height / 4
@@ -112,7 +117,12 @@ class Engine:
             y=paddle_y,
             width=paddle_width,
             height=paddle_height,
-            color=WHITE
+            color=WHITE,
+            max_acc=100,
+            min_acc=-100,
+            max_vel=1000,
+            min_vel=-1000,
+            decel_rate=25
         )
 
     def update(self, dt: float):

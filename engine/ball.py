@@ -12,13 +12,15 @@ class Ball:
         pos (np.ndarray): 2D position vector [x, y]
         vel (np.ndarray): 2D velocity vector [vx, vy]
         acc (np.ndarray): 2D acceleration vector [ax, ay]
-        jerk (const np.float64): Rate of change of acceleration (negative value causes deceleration)
+        decel_rate (float): Deceleration rate
         color (Tuple[int, int, int]): RGB color tuple
+        max_acc (np.ndarray): Maximum acceleration
+        min_acc (np.ndarray): Minimum acceleration
+        max_vel (np.ndarray): Maximum velocity
+        min_vel (np.ndarray): Minimum velocity
     """
 
-    jerk: np.float64 = np.float64(-1)
-    
-    def __init__(self, radius: float, x: float, y: float, vel: Tuple[float, float], color: Tuple[int, int, int]):
+    def __init__(self, radius: float, x: float, y: float, vel: Tuple[float, float], color: Tuple[int, int, int], max_acc: float, min_acc: float, max_vel: float, min_vel: float, decel_rate: float):
         """Initialize a ball with given position, velocity, and appearance.
 
         Args:
@@ -27,33 +29,49 @@ class Ball:
             y (float): Initial y position
             vel (Tuple[float, float]): Initial velocity vector (vx, vy)
             color (Tuple[int, int, int]): RGB color tuple
+            max_acc (float): Maximum acceleration
+            min_acc (float): Minimum acceleration
+            max_vel (float): Maximum velocity
+            min_vel (float): Minimum velocity
+            decel_rate (float): Deceleration rate
         """
         self.radius = radius
         self.pos = np.array([x, y])
         self.vel = np.array(vel)
         self.acc = np.array([0, 0])
         self.color = color
+        self.max_acc = np.array([max_acc, max_acc])
+        self.min_acc = np.array([min_acc, min_acc])
+        self.max_vel = np.array([max_vel, max_vel])
+        self.min_vel = np.array([min_vel, min_vel])
+        self.decel_rate = np.abs(np.float64(decel_rate))
 
     def update_acceleration(self, dt: float):
-        """Update ball acceleration based on jerk.
+        """Update ball acceleration based on decel_rate.
         
         Args:
             dt (float): Time step delta
         """
-        self.acc = np.add(self.acc, np.multiply(self.jerk, dt))
-        # Prevent negative acceleration
-        if self.acc[0] < 0:
-            self.acc[0] = 0
-        if self.acc[1] < 0:
-            self.acc[1] = 0
-
+        # calc the decel to apply
+        decel = np.multiply(self.decel_rate, dt)
+        
+        # apply the decel to the x and y acc
+        self.acc = np.add(self.acc, np.multiply(decel, np.negative(np.sign(self.acc))))
+        
+        # ensure the acc is within the min and max acc
+        self.acc = np.maximum(np.minimum(self.acc, self.max_acc), self.min_acc)
+        
     def update_velocity(self, dt: float):
         """Update ball velocity based on acceleration.
         
         Args:
             dt (float): Time step delta
         """
+        # apply the acc to the vel
         self.vel = np.add(self.vel, np.multiply(self.acc, dt))
+        
+        # ensure the vel is within the min and max vel
+        self.vel = np.maximum(np.minimum(self.vel, self.max_vel), self.min_vel)
         
     def update_position(self, dt: float):
         """Update ball position based on velocity.
