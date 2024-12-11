@@ -30,13 +30,13 @@ def paddle_intersect_bounds(paddle: Paddle, height: int) -> None:
     if paddle.pos[1] < 0:
         # collide with top boundary
         paddle.pos[1] = 0
-        paddle.vel[1] = -paddle.vel[1]
-        paddle.acc[1] = 0
+        paddle.vel = np.negative(paddle.vel)
+        paddle.acc = np.negative(paddle.acc)
     elif paddle.pos[1] + paddle.height > height:
         # collide with bottom boundary
         paddle.pos[1] = height - paddle.height
-        paddle.vel[1] = -paddle.vel[1]
-        paddle.acc[1] = 0
+        paddle.vel = np.negative(paddle.vel)
+        paddle.acc = np.negative(paddle.acc)
         
 def ball_intersect_paddle(ball: Ball, paddle: Paddle) -> None:
     # a buffer to prevent visual overlap
@@ -68,6 +68,12 @@ def ball_intersect_paddle(ball: Ball, paddle: Paddle) -> None:
     if in_y_range and in_x_range:
         ball.vel = np.negative(ball.vel)
         ball.acc = np.negative(ball.acc)
+        # if paddle is to the left of the ball, bounce off the left side of the paddle
+        if paddle.pos[0] > ball.pos[0]:
+            ball.pos[0] = paddle.pos[0] - paddle.width - ball.radius
+        # if paddle is to the right of the ball, bounce off the right side of the paddle
+        else:
+            ball.pos[0] = paddle.pos[0] + paddle.width + ball.radius
 
 
 # Define common colors
@@ -122,7 +128,8 @@ class Engine:
             min_acc=-100,
             max_vel=1000,
             min_vel=-1000,
-            decel_rate=25
+            decel_rate=25,
+            move_incr=100
         )
 
     def update(self, dt: float):
