@@ -46,7 +46,7 @@ class Paddle:
         self.min_acc = np.float64(min_acc)
         self.max_vel = np.float64(max_vel)
         self.min_vel = np.float64(min_vel)
-        self.decel_rate = np.abs(np.float64(decel_rate))
+        self.decel_rate = np.float64(decel_rate)
         self.move_incr = np.float64(move_incr)
         self.width = width
         self.height = height
@@ -59,10 +59,10 @@ class Paddle:
             dt (float): Time step delta
         """
         # calc the decel to apply
-        decel = np.multiply(self.decel_rate, dt)
+        decel = np.power(self.decel_rate, dt)
         
-        # apply the decel to the x and y acc based on the sign of the acc
-        self.acc = np.add(self.acc, np.multiply(decel, np.negative(np.sign(self.acc))))
+        # apply the decel to the acc
+        self.acc = np.multiply(self.acc, decel)
         
         # ensure the acc is within the min and max acc
         self.acc = np.maximum(np.minimum(self.acc, self.max_acc), self.min_acc)
@@ -118,7 +118,51 @@ class Paddle:
         return Rectangle(self.pos[0], self.pos[1], self.width, self.height, color=self.color)
 
     def move_up(self, dt: float):
-        self.acc = np.subtract(self.acc, self.move_incr)
+        self.acc = self.acc - (self.move_incr * dt)
         
     def move_down(self, dt: float):
-        self.acc = np.add(self.acc, self.move_incr)
+        self.acc = self.acc + (self.move_incr * dt)
+
+
+
+class AiPaddle(Paddle):    
+    def __init__(self, x: float, y: float, width: float, height: float, color: Tuple[int, int, int], max_acc: float, min_acc: float, max_vel: float, min_vel: float, decel_rate: float, move_incr: float, y_margin: float):
+        super().__init__(x, y, width, height, color, max_acc, min_acc, max_vel, min_vel, decel_rate, move_incr)
+        # the margin added to the paddle's y position to determine if the paddle should move
+        self.y_margin = y_margin
+        
+    def move_towards(self, target_pos: np.ndarray, target_vel: np.ndarray, dt: float):
+        # determine if the ball is moving towards the paddle
+        moving_towards = target_vel[0] >= 0
+        
+        # center of the paddle
+        center_y = (self.pos[1] + (self.height / 2))
+        
+        if not moving_towards:
+            # center on the ball
+            if target_pos[1] <= center_y:
+                self.move_up(dt)
+            elif target_pos[1] >= center_y:
+                self.move_down(dt)
+            return
+        
+        # determine where the ball will hit on the y axis at the paddle's x
+        # y = (vy / vx) * (x - x0) + y0
+        hit_y = (target_vel[1] / target_vel[0]) * (self.pos[0] - target_pos[0]) + target_pos[1]
+        will_hit = hit_y >= self.pos[1] and hit_y <= self.pos[1] + self.height
+        
+        if will_hit:
+            # if the ball will hit the paddle, do nothing
+            return
+        elif hit_y < center_y:
+            # if the ball is above the center of the paddle, move up
+            self.move_up(dt)
+        elif hit_y > center_y:
+            # if the ball is below the center of the paddle, move down
+            self.move_down(dt)
+        
+    def update(self, dt: float, ball_pos: np.ndarray, ball_vel: np.ndarray):
+        super().update(dt)
+        # move the paddle towards the ball
+        self.move_towards(ball_pos, ball_vel, dt)
+        

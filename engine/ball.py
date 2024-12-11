@@ -53,10 +53,10 @@ class Ball:
             dt (float): Time step delta
         """
         # calc the decel to apply
-        decel = np.multiply(self.decel_rate, dt)
+        decel = np.power(self.decel_rate, dt)
         
         # apply the decel to the x and y acc
-        self.acc = np.add(self.acc, np.multiply(decel, np.negative(np.sign(self.acc))))
+        self.acc = np.multiply(self.acc, decel)
         
         # ensure the acc is within the min and max acc
         self.acc = np.maximum(np.minimum(self.acc, self.max_acc), self.min_acc)
