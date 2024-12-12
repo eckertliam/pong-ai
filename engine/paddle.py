@@ -22,7 +22,7 @@ class Paddle:
         min_acc (np.float64): Minimum acceleration
         max_vel (np.float64): Maximum velocity
         min_vel (np.float64): Minimum velocity
-        batch (pyglet.graphics.Batch): Batch for drawing
+        shape (pyglet.shapes.Rectangle): Pyglet rectangle shape
     """
     def __init__(self, x: float, y: float, width: float, height: float, color: Tuple[int, int, int], max_acc: float, min_acc: float, max_vel: float, min_vel: float, decel_rate: float, move_incr: float, batch: Batch):
         """Initialize a paddle with given position and dimensions.
@@ -39,6 +39,7 @@ class Paddle:
             min_vel (float): Minimum velocity
             decel_rate (float): Deceleration rate
             move_incr (float): Amount to increment acc by per move
+            batch (pyglet.graphics.Batch): Batch for drawing
         """
         self.pos = np.array([x, y])
         self.vel = np.float64(0)
