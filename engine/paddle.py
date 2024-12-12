@@ -107,6 +107,7 @@ class Paddle:
         self.shape.y = self.pos[1]
         self.shape.width = self.width
         self.shape.height = self.height
+        self.shape.color = self.color
 
     def move_up(self, dt: float):
         self.acc = self.acc - (self.move_incr * dt)
