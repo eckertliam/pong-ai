@@ -126,10 +126,8 @@ class Paddle:
 
 
 class AiPaddle(Paddle):    
-    def __init__(self, x: float, y: float, width: float, height: float, color: Tuple[int, int, int], max_acc: float, min_acc: float, max_vel: float, min_vel: float, decel_rate: float, move_incr: float, y_margin: float):
+    def __init__(self, x: float, y: float, width: float, height: float, color: Tuple[int, int, int], max_acc: float, min_acc: float, max_vel: float, min_vel: float, decel_rate: float, move_incr: float):
         super().__init__(x, y, width, height, color, max_acc, min_acc, max_vel, min_vel, decel_rate, move_incr)
-        # the margin added to the paddle's y position to determine if the paddle should move
-        self.y_margin = y_margin
         
     def move_towards(self, target_pos: np.ndarray, target_vel: np.ndarray, dt: float):
         # determine if the ball is moving towards the paddle

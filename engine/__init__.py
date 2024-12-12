@@ -3,28 +3,28 @@ from ball import Ball
 import numpy as np
 import pyglet
 
-BOUND_SLOWDOWN_FACTOR = 0.9
+BOUND_SLOWDOWN_FACTOR = 0.6
 
 def ball_intersect_bounds(ball: Ball, width: int, height: int) -> None:
     if ball.pos[0] - ball.radius < 0:
         # bounce off left boundary
-        ball.pos[0] = ball.radius
+        ball.pos[0] = ball.radius + 1
         ball.vel[0] = -ball.vel[0] * BOUND_SLOWDOWN_FACTOR
         ball.acc[0] = 0
     elif ball.pos[0] + ball.radius > width:
         # bounce off right boundary
-        ball.pos[0] = width - ball.radius
+        ball.pos[0] = width - ball.radius - 1
         ball.vel[0] = -ball.vel[0] * BOUND_SLOWDOWN_FACTOR
         ball.acc[0] = 0
         
     if ball.pos[1] - ball.radius < 0:
         # bounce off top boundary
-        ball.pos[1] = ball.radius
+        ball.pos[1] = ball.radius + 1
         ball.vel[1] = -ball.vel[1] * BOUND_SLOWDOWN_FACTOR
         ball.acc[1] = 0
     elif ball.pos[1] + ball.radius > height:
         # bounce off bottom boundary
-        ball.pos[1] = height - ball.radius
+        ball.pos[1] = height - ball.radius - 1
         ball.vel[1] = -ball.vel[1] * BOUND_SLOWDOWN_FACTOR
         ball.acc[1] = 0
         
