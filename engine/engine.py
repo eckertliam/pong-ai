@@ -95,7 +95,7 @@ class Engine:
         paddle (Paddle): Player paddle object
     """
 
-    def __init__(self, screen_width: int, screen_height: int):
+    def __init__(self, screen_width: int, screen_height: int, batch: pyglet.graphics.Batch):
         """Initialize game engine with screen dimensions.
 
         Args:
@@ -115,7 +115,8 @@ class Engine:
             min_acc=-125,
             max_vel=300,
             min_vel=-300,
-            decel_rate=0.01
+            decel_rate=0.01,
+            batch=batch
         )
         paddle_width = self.screen_width / 25
         paddle_height = self.screen_height / 4
@@ -132,7 +133,8 @@ class Engine:
             max_vel=1000,
             min_vel=-1000,
             decel_rate=0.01,
-            move_incr=100
+            move_incr=100,
+            batch=batch
         )
         paddle_x = self.screen_width - paddle_width - paddle_width / 2
         self.ai_paddle = AiPaddle(
@@ -146,7 +148,8 @@ class Engine:
             max_vel=500,
             min_vel=-500,
             decel_rate=0.9,
-            move_incr=125
+            move_incr=125,
+            batch=batch
         )
 
     def update(self, dt: float):
@@ -177,11 +180,13 @@ class Engine:
 
 
 def run(width: int, height: int, fps: int = 60) -> None:
-    # define the engine
-    engine = Engine(width, height)
     # define the window
     window = pyglet.window.Window(width=width, height=height, caption="Pong AI")
-   
+    # define the batch  
+    batch = pyglet.graphics.Batch()
+    # define the engine
+    engine = Engine(width, height, batch)
+    
     # define the update function
     def update(dt: float):
         engine.update(dt)
@@ -190,15 +195,9 @@ def run(width: int, height: int, fps: int = 60) -> None:
     @window.event
     def on_draw():
         window.clear()
-        ball_shape = engine.ball.to_pyglet()
-        paddle_shape = engine.player_paddle.to_pyglet()
-        ai_paddle_shape = engine.ai_paddle.to_pyglet()
-        ball_shape.draw()
-        paddle_shape.draw()
-        ai_paddle_shape.draw()
+        batch.draw()
 
     # schedule the update function
     pyglet.clock.schedule_interval(update, 1/fps)
     # run the window
     pyglet.app.run()
-    
