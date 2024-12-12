@@ -95,7 +95,7 @@ class Engine:
         paddle (Paddle): Player paddle object
     """
 
-    def __init__(self, screen_width: int, screen_height: int):
+    def __init__(self, screen_width: int, screen_height: int, batch: pyglet.graphics.Batch):
         """Initialize game engine with screen dimensions.
 
         Args:
@@ -177,11 +177,13 @@ class Engine:
 
 
 def run(width: int, height: int, fps: int = 60) -> None:
-    # define the engine
-    engine = Engine(width, height)
     # define the window
     window = pyglet.window.Window(width=width, height=height, caption="Pong AI")
-   
+    # define the batch  
+    batch = pyglet.graphics.Batch()
+    # define the engine
+    engine = Engine(width, height, batch)
+    
     # define the update function
     def update(dt: float):
         engine.update(dt)
