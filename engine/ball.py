@@ -1,7 +1,7 @@
-from typing import Tuple, List
+from typing import Tuple
 import numpy as np
 from pyglet.shapes import Circle
-    
+from pyglet.graphics import Batch
 class Ball:
     """A ball class representing a moving circular object in a game.
     
@@ -18,9 +18,10 @@ class Ball:
         min_acc (np.ndarray): Minimum acceleration
         max_vel (np.ndarray): Maximum velocity
         min_vel (np.ndarray): Minimum velocity
+        shape (pyglet.shapes.Circle): Pyglet circle shape
     """
 
-    def __init__(self, radius: float, x: float, y: float, vel: Tuple[float, float], color: Tuple[int, int, int], max_acc: float, min_acc: float, max_vel: float, min_vel: float, decel_rate: float):
+    def __init__(self, radius: float, x: float, y: float, vel: Tuple[float, float], color: Tuple[int, int, int], max_acc: float, min_acc: float, max_vel: float, min_vel: float, decel_rate: float, batch: Batch):
         """Initialize a ball with given position, velocity, and appearance.
 
         Args:
@@ -34,6 +35,7 @@ class Ball:
             max_vel (float): Maximum velocity
             min_vel (float): Minimum velocity
             decel_rate (float): Deceleration rate
+            batch (pyglet.graphics.Batch): Batch for drawing
         """
         self.radius = radius
         self.pos = np.array([x, y])
@@ -45,7 +47,7 @@ class Ball:
         self.max_vel = np.array([max_vel, max_vel])
         self.min_vel = np.array([min_vel, min_vel])
         self.decel_rate = np.abs(np.float64(decel_rate))
-
+        self.shape = Circle(x, y, radius, color=color, batch=batch)
     def update_acceleration(self, dt: float):
         """Update ball acceleration based on decel_rate.
         
@@ -81,6 +83,12 @@ class Ball:
         """
         self.pos = np.add(self.pos, np.multiply(self.vel, dt))
         
+    def update_shape(self):
+        self.shape.x = self.pos[0]
+        self.shape.y = self.pos[1]
+        self.shape.radius = self.radius
+        self.shape.color = self.color
+        
     def update(self, dt: float):
         """Update ball physics (acceleration, velocity, position).
         
@@ -90,6 +98,4 @@ class Ball:
         self.update_acceleration(dt)
         self.update_velocity(dt)
         self.update_position(dt)
-            
-    def to_pyglet(self) -> Circle:
-        return Circle(self.pos[0], self.pos[1], self.radius, color=self.color)
+        self.update_shape()
