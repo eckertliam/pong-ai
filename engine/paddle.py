@@ -1,6 +1,7 @@
 from typing import Tuple
 import numpy as np
 from pyglet.shapes import Rectangle
+from pyglet.graphics import Batch
 
 class Paddle:
     """A paddle class representing a movable rectangular paddle in a game.
@@ -21,9 +22,9 @@ class Paddle:
         min_acc (np.float64): Minimum acceleration
         max_vel (np.float64): Maximum velocity
         min_vel (np.float64): Minimum velocity
+        batch (pyglet.graphics.Batch): Batch for drawing
     """
-
-    def __init__(self, x: float, y: float, width: float, height: float, color: Tuple[int, int, int], max_acc: float, min_acc: float, max_vel: float, min_vel: float, decel_rate: float, move_incr: float):
+    def __init__(self, x: float, y: float, width: float, height: float, color: Tuple[int, int, int], max_acc: float, min_acc: float, max_vel: float, min_vel: float, decel_rate: float, move_incr: float, batch: Batch):
         """Initialize a paddle with given position and dimensions.
 
         Args:
@@ -51,6 +52,7 @@ class Paddle:
         self.width = width
         self.height = height
         self.color = color
+        self.shape = Rectangle(x, y, width, height, color=color, batch=batch)
 
     def update_acceleration(self, dt: float):
         """Update paddle acceleration based on decel_rate.
@@ -97,25 +99,13 @@ class Paddle:
         self.update_acceleration(dt)
         self.update_velocity(dt)
         self.update_position(dt)
+        self.update_shape()
         
-    def _contains(self, point: np.ndarray) -> bool:
-        """Check if a point is inside the paddle's rectangle.
-
-        Args:
-            point (np.ndarray): 2D point coordinates [x, y]
-
-        Returns:
-            bool: True if point is inside paddle, False otherwise
-        """
-        return (
-            point[0] >= self.pos[0] and
-            point[0] <= self.pos[0] + self.width and
-            point[1] >= self.pos[1] and
-            point[1] <= self.pos[1] + self.height
-        )
-        
-    def to_pyglet(self) -> Rectangle:
-        return Rectangle(self.pos[0], self.pos[1], self.width, self.height, color=self.color)
+    def update_shape(self):
+        self.shape.x = self.pos[0]
+        self.shape.y = self.pos[1]
+        self.shape.width = self.width
+        self.shape.height = self.height
 
     def move_up(self, dt: float):
         self.acc = self.acc - (self.move_incr * dt)
@@ -126,9 +116,6 @@ class Paddle:
 
 
 class AiPaddle(Paddle):    
-    def __init__(self, x: float, y: float, width: float, height: float, color: Tuple[int, int, int], max_acc: float, min_acc: float, max_vel: float, min_vel: float, decel_rate: float, move_incr: float):
-        super().__init__(x, y, width, height, color, max_acc, min_acc, max_vel, min_vel, decel_rate, move_incr)
-        
     def move_towards(self, target_pos: np.ndarray, target_vel: np.ndarray, dt: float):
         # determine if the ball is moving towards the paddle
         moving_towards = target_vel[0] >= 0

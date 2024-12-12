@@ -192,12 +192,7 @@ def run(width: int, height: int, fps: int = 60) -> None:
     @window.event
     def on_draw():
         window.clear()
-        ball_shape = engine.ball.to_pyglet()
-        paddle_shape = engine.player_paddle.to_pyglet()
-        ai_paddle_shape = engine.ai_paddle.to_pyglet()
-        ball_shape.draw()
-        paddle_shape.draw()
-        ai_paddle_shape.draw()
+        batch.draw()
 
     # schedule the update function
     pyglet.clock.schedule_interval(update, 1/fps)
