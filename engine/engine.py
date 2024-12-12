@@ -115,7 +115,8 @@ class Engine:
             min_acc=-125,
             max_vel=300,
             min_vel=-300,
-            decel_rate=0.01
+            decel_rate=0.01,
+            batch=batch
         )
         paddle_width = self.screen_width / 25
         paddle_height = self.screen_height / 4
@@ -132,7 +133,8 @@ class Engine:
             max_vel=1000,
             min_vel=-1000,
             decel_rate=0.01,
-            move_incr=100
+            move_incr=100,
+            batch=batch
         )
         paddle_x = self.screen_width - paddle_width - paddle_width / 2
         self.ai_paddle = AiPaddle(
@@ -146,7 +148,8 @@ class Engine:
             max_vel=500,
             min_vel=-500,
             decel_rate=0.9,
-            move_incr=125
+            move_incr=125,
+            batch=batch
         )
 
     def update(self, dt: float):
@@ -198,4 +201,3 @@ def run(width: int, height: int, fps: int = 60) -> None:
     pyglet.clock.schedule_interval(update, 1/fps)
     # run the window
     pyglet.app.run()
-    
