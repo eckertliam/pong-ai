@@ -163,7 +163,7 @@ def ball_reset(ball: Ball, ball_origin: np.ndarray):
     ball.vel = (randint(BALL_MIN_VEL, BALL_MAX_VEL), randint(BALL_MIN_VEL, BALL_MAX_VEL))
 
 def make_ball(screen_width: int, screen_height: int, batch: pyglet.graphics.Batch) -> Ball:
-    ball_radius = screen_width / 25
+    ball_radius = screen_width / BALL_RADIUS_RATIO
     ball_x = screen_width / 2
     ball_y = screen_height / 2
     ball_vel = (randint(BALL_MIN_VEL, BALL_MAX_VEL), randint(BALL_MIN_VEL, BALL_MAX_VEL))
@@ -198,21 +198,26 @@ class Engine:
         ball_origin (np.ndarray): Ball starting position
         player_paddle_origin (np.ndarray): Player paddle starting position
         ai_paddle_origin (np.ndarray): AI paddle starting position
+        batch (pyglet.graphics.Batch): Batch object for rendering
+        key_handler (pyglet.window.key.KeyStateHandler): Key handler object
     """
 
-    def __init__(self, screen_width: int, screen_height: int, batch: pyglet.graphics.Batch):
+    def __init__(self, screen_width: int, screen_height: int, batch: pyglet.graphics.Batch, key_handler: pyglet.window.key.KeyStateHandler):
         """Initialize game engine with screen dimensions.
 
         Args:
             screen_width (int): Screen width
             screen_height (int): Screen height
             batch (pyglet.graphics.Batch): Batch object for rendering
+            key_handler (pyglet.window.key.KeyStateHandler): Key handler object
         """
         self.screen_width = screen_width
         self.screen_height = screen_height
         self.in_game = True
         self.player_score = 0
         self.ai_score = 0
+        self.batch = batch
+        self.key_handler = key_handler
         self.ball = make_ball(self.screen_width, self.screen_height, batch)
         self.ball_origin = self.ball.pos
         self.player_paddle, self.ai_paddle = make_paddles(self.screen_width, self.screen_height, batch)
@@ -232,12 +237,7 @@ class Engine:
         # check if either player scored
         scored = check_scored(self.ball, self.screen_width)
         if scored > 0:
-            if scored == 1:
-                self.player_score += 1
-            else:
-                self.ai_score += 1
-            self.end_round()
-            return
+            return self.start_scored(scored)
         # update the ball, ai paddle, and player paddle
         self.ball.update(dt)
         self.ai_paddle.update(dt, self.ball.pos, self.ball.vel)
@@ -249,23 +249,62 @@ class Engine:
         ball_intersect_paddle(self.ball, self.player_paddle)
         ball_intersect_paddle(self.ball, self.ai_paddle)
     
-    def end_round(self):
+    def start_scored(self, scored: int):
         self.in_game = False
+        if scored == 1:
+            self.player_score += 1
+        else:
+            self.ai_score += 1
         ball_reset(self.ball, self.ball_origin)
         paddle_reset(self.player_paddle, self.player_paddle_origin)
         paddle_reset(self.ai_paddle, self.ai_paddle_origin)
-
-    def start_round(self):
-        self.in_game = True
+        scored_txt = "Player scored" if scored == 1 else "AI scored"
+        score_txt = f"{self.player_score} - {self.ai_score}"
+        scored_label = pyglet.text.Label(
+            scored_txt,
+            font_name="Arial",
+            font_size=24,
+            x=self.screen_width / 2,
+            y=self.screen_height / 2,
+            anchor_x="center",
+            anchor_y="center",
+            batch=self.batch
+        )
+        score_label = pyglet.text.Label(
+            score_txt,
+            font_name="Arial",
+            font_size=24,
+            x=self.screen_width / 2,
+            y=self.screen_height / 2 - 24,
+            anchor_x="center",
+            anchor_y="center",
+            batch=self.batch
+        )
+        self.batch.draw()
+        
+        # check if space is pressed to start next round
+        def check_space(dt: float):
+            if self.key_handler[pyglet.window.key.SPACE]:
+                scored_label.delete()
+                score_label.delete()
+                self.in_game = True
+                pyglet.clock.unschedule(check_space)
+                
+        pyglet.clock.schedule_interval(check_space, 1/60)
+        
+    
+    
         
         
 def run(width: int, height: int, fps: int = 60) -> None:
     # define the window
     window = pyglet.window.Window(width=width, height=height, caption="Pong AI")
+    key_handler = pyglet.window.key.KeyStateHandler()
+    window.push_handlers(key_handler)
     # define the batch  
     batch = pyglet.graphics.Batch()
     # define the engine
-    engine = Engine(width, height, batch)
+    engine = Engine(width, height, batch, key_handler)
     
     # define the update function
     def update(dt: float):
