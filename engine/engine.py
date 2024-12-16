@@ -1,5 +1,6 @@
 from paddle import AiPaddle, Paddle
 from ball import Ball
+from camera import Camera, CameraFrame
 import numpy as np
 import pyglet
 from random import randint
@@ -200,6 +201,7 @@ class Engine:
         ai_paddle_origin (np.ndarray): AI paddle starting position
         batch (pyglet.graphics.Batch): Batch object for rendering
         key_handler (pyglet.window.key.KeyStateHandler): Key handler object
+        camera (Camera): Camera object
     """
 
     def __init__(self, screen_width: int, screen_height: int, batch: pyglet.graphics.Batch, key_handler: pyglet.window.key.KeyStateHandler):
@@ -223,7 +225,7 @@ class Engine:
         self.player_paddle, self.ai_paddle = make_paddles(self.screen_width, self.screen_height, batch)
         self.player_paddle_origin = self.player_paddle.pos
         self.ai_paddle_origin = self.ai_paddle.pos
-        
+        self.camera = Camera(self.screen_width, self.screen_height)
 
     def update(self, dt: float):
         """Update game state.
@@ -320,3 +322,7 @@ def run(width: int, height: int, fps: int = 60) -> None:
     pyglet.clock.schedule_interval(update, 1/fps)
     # run the window
     pyglet.app.run()
+
+
+if __name__ == "__main__":
+    run(640, 480)

@@ -4,7 +4,6 @@ from typing import Optional, Tuple
 from pyglet.image import ImageData, Texture
 import mediapipe as mp
 from dataclasses import dataclass
-import time
 
 mp_hands = mp.solutions.hands
 
