@@ -4,20 +4,19 @@ from typing import Optional, Tuple
 from pyglet.image import ImageData, Texture
 import mediapipe as mp
 from dataclasses import dataclass
+import time
 
 mp_hands = mp.solutions.hands
 
 @dataclass
-class FrameData:
+class CameraFrame:
     texture: Optional[Texture]
     finger_coordinates: Optional[Tuple[int, int]]
 
 class Camera:
-    def __init__(self, cap_width: int, cap_height: int, display_width: int, display_height: int):
+    def __init__(self, cap_width: int, cap_height: int):
         self.cap_width = cap_width
         self.cap_height = cap_height
-        self.display_width = display_width
-        self.display_height = display_height
         self.cap = cv2.VideoCapture(0)
         self.cap.set(cv2.CAP_PROP_FRAME_WIDTH, cap_width)
         self.cap.set(cv2.CAP_PROP_FRAME_HEIGHT, cap_height)
@@ -37,14 +36,14 @@ class Camera:
             return x, y
         return None
     
-    def capture(self) -> FrameData:
+    def capture(self) -> CameraFrame:
         if not self.cap.isOpened():
             raise Exception("Camera is not opened")
         # capture frame
         _, frame_bgr = self.cap.read()
         # check if frame is None
         if frame_bgr is None:
-            return FrameData(None, None)
+            return CameraFrame(None, None)
         # convert to RGB
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         # flip the image vertically
@@ -59,7 +58,7 @@ class Camera:
         image_data = ImageData(self.cap_width, self.cap_height, "RGB", frame_data, pitch=pitch)
         # create texture
         texture = image_data.get_texture()
-        return FrameData(texture, finger_coordinates)
+        return CameraFrame(texture, finger_coordinates)
     
     def release(self):
         self.cap.release()
