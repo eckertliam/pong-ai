@@ -45,8 +45,6 @@ class Camera:
             return CameraFrame(None, None)
         # convert to RGB
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-        # flip the image vertically
-        frame_rgb = cv2.flip(frame_rgb, 0)
         # detect hand landmarks
         finger_coordinates = self.finger_coordinates(frame_rgb)
         # convert to bytes
