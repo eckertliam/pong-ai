@@ -1,10 +1,10 @@
-from paddle import AiPaddle, Paddle
+from paddle import AiPaddle, HumanPaddle, Paddle
 from ball import Ball
 from camera import Camera, CameraFrame
 import numpy as np
 import pyglet
 from random import randint
-from typing import Tuple
+from typing import Tuple, Optional
 
 BOUND_SLOWDOWN_FACTOR = 0.6
 
@@ -114,7 +114,7 @@ def make_paddles(screen_width: int, screen_height: int, batch: pyglet.graphics.B
     paddle_height = screen_height / PADDLE_HEIGHT_RATIO
     paddle_x = paddle_width / 2
     paddle_y = screen_height / 2 - paddle_height / 2
-    player_paddle = Paddle(
+    player_paddle = HumanPaddle(
         x=paddle_x,
         y=paddle_y,
         width=paddle_width,
@@ -150,12 +150,12 @@ def paddle_reset(paddle: Paddle, paddle_origin: np.ndarray):
     paddle.vel = 0
     paddle.acc = 0
 
-BALL_RADIUS_RATIO = 100
+BALL_RADIUS_RATIO = 75
 
-BALL_MAX_VEL = 1000
-BALL_MIN_VEL = -1000
-BALL_MAX_ACC = 500
-BALL_MIN_ACC = -500
+BALL_MAX_VEL = 500
+BALL_MIN_VEL = -500
+BALL_MAX_ACC = 250
+BALL_MIN_ACC = -250
 BALL_DECEL_RATE = 0.01
 BALL_COLOR = (255, 105, 180)
 
@@ -183,6 +183,7 @@ def make_ball(screen_width: int, screen_height: int, batch: pyglet.graphics.Batc
     )
     return ball
 
+FINGER_SENSITIVITY = 10
 
 class Engine:
     """Main game engine class that manages game objects and updates.
@@ -202,6 +203,8 @@ class Engine:
         batch (pyglet.graphics.Batch): Batch object for rendering
         key_handler (pyglet.window.key.KeyStateHandler): Key handler object
         camera (Camera): Camera object
+        finger_circle (pyglet.shapes.Circle): Finger circle object
+        finger_history (list[Tuple[int, int]]): Past 5 finger positions
     """
 
     def __init__(self, screen_width: int, screen_height: int, batch: pyglet.graphics.Batch, key_handler: pyglet.window.key.KeyStateHandler):
@@ -226,6 +229,31 @@ class Engine:
         self.player_paddle_origin = self.player_paddle.pos
         self.ai_paddle_origin = self.ai_paddle.pos
         self.camera = Camera(self.screen_width, self.screen_height)
+        self.finger_circle = pyglet.shapes.Circle(0, 0, 10, color=RED, batch=batch)
+        # past 5 finger positions
+        self.finger_history = []
+        self.last_finger_pos = None
+    
+    def handle_camera(self) -> Optional[Tuple[int, int]]:
+        # get the camera frame
+        camera_frame = self.camera.capture()
+        # get the finger position
+        finger_pos = camera_frame.finger_coordinates
+        if finger_pos:
+            # add the finger position to the history
+            self.finger_history.append(finger_pos)
+            # keep the history to 5 positions
+            if len(self.finger_history) > 5:
+                self.finger_history.pop(0)
+            # calculate a smoothed finger position
+            self.last_finger_pos = np.mean(self.finger_history, axis=0)
+            # update the finger circle position
+            self.finger_circle.x = self.last_finger_pos[0]
+            self.finger_circle.y = self.last_finger_pos[1]
+            # return the smoothed finger position for the player paddle
+            return self.last_finger_pos
+        else:
+            return None
 
     def update(self, dt: float):
         """Update game state.
@@ -236,6 +264,7 @@ class Engine:
         # escape if game is not in progress
         if not self.in_game:
             return
+        finger_pos = self.handle_camera()
         # check if either player scored
         scored = check_scored(self.ball, self.screen_width)
         if scored > 0:
@@ -243,7 +272,7 @@ class Engine:
         # update the ball, ai paddle, and player paddle
         self.ball.update(dt)
         self.ai_paddle.update(dt, self.ball.pos, self.ball.vel)
-        self.player_paddle.update(dt)
+        self.player_paddle.update(dt, finger_pos, FINGER_SENSITIVITY)
         # check for collisions with the bounds and paddles
         ball_intersect_bounds(self.ball, self.screen_width, self.screen_height)
         paddle_intersect_bounds(self.player_paddle, self.screen_height)

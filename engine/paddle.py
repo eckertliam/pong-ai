@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Optional
 import numpy as np
 from pyglet.shapes import Rectangle
 from pyglet.graphics import Batch
@@ -153,3 +153,23 @@ class AiPaddle(Paddle):
         # move the paddle towards the ball
         self.move_towards(ball_pos, ball_vel, dt)
         
+        
+class HumanPaddle(Paddle):
+    def follow_finger(self, finger_pos: Optional[Tuple[int, int]], dt: float, sensitivity: float):
+        if finger_pos is None:
+            return
+        
+        # paddle center
+        center_y = (self.pos[1] + (self.height / 2))
+        
+        if finger_pos[1] < center_y - sensitivity:
+            self.move_up(dt)
+        elif finger_pos[1] > center_y + sensitivity:
+            self.move_down(dt)
+        else:
+            # stop moving the paddle
+            self.acc = 0
+        
+    def update(self, dt: float, finger_pos: Optional[Tuple[int, int]], sensitivity: float):
+        super().update(dt)
+        self.follow_finger(finger_pos, dt, sensitivity)
