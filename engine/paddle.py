@@ -89,22 +89,22 @@ class AiPaddle(Paddle):
         
         
 class HumanPaddle(Paddle):
-    def follow_finger(self, finger_pos: Optional[Tuple[int, int]], dt: float, sensitivity: float):
+    def follow_finger(self, finger_pos: Optional[Tuple[int, int]], dt: float):
         if finger_pos is None:
             return
         
         # paddle center
         center_y = (self.pos[1] + (self.height / 2))
         
-        if finger_pos[1] < center_y - sensitivity:
+        if finger_pos[1] < center_y:
             self.move_up()
-        elif finger_pos[1] > center_y + sensitivity:
+        elif finger_pos[1] > center_y:
             self.move_down()
         else:
             # stop moving the paddle
             self.stop()
         
-    def update(self, dt: float, finger_pos: Optional[Tuple[int, int]], sensitivity: float):
+    def update(self, dt: float, finger_pos: Optional[Tuple[int, int]]):
+        self.follow_finger(finger_pos, dt)
         super().update(dt)
-        self.follow_finger(finger_pos, dt, sensitivity)
         

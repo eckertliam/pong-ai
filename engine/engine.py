@@ -67,8 +67,6 @@ def make_paddles(screen_width: int, screen_height: int, batch: pyglet.graphics.B
     return player_paddle, ai_paddle
 
 
-FINGER_SENSITIVITY = 10
-
 class Engine:
     """Main game engine class that manages game objects and updates.
     
@@ -156,7 +154,7 @@ class Engine:
         # update the ball, ai paddle, and player paddle
         self.ball.update(dt)
         self.ai_paddle.update(dt, self.ball.pos)
-        self.player_paddle.update(dt, finger_pos, FINGER_SENSITIVITY)
+        self.player_paddle.update(dt, finger_pos)
         # check for collisions with the bounds and paddles
         ball_intersect_paddle(self.ball, self.player_paddle)
         ball_intersect_paddle(self.ball, self.ai_paddle)
