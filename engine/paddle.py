@@ -10,22 +10,17 @@ class Paddle:
         self.direction = np.float64(1)
         # speed of the paddle
         self.speed = np.float64(speed)
-        # base speed of the paddle
-        self._base_speed = np.float64(speed)
         # boost of the paddle
         self.boost = np.float64(0)
         self.width = width
         self.height = height
         self.color = color
         self.shape = Rectangle(x, y, width, height, color=color, batch=batch)
-
-    def update_speed(self, dt: float):
-        self.speed = self._base_speed + self.boost
-        if self.boost > 0:
-            self.boost -= dt
         
     def update_position(self, dt: float):
-        self.pos[1] += dt * self.speed * self.direction
+        self.pos[1] += dt * (self.speed + self.boost) * self.direction
+        if self.boost > 0:
+            self.boost -= dt
         
     def update(self, dt: float):
         self.update_position(dt)
