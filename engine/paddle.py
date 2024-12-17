@@ -2,156 +2,90 @@ from typing import Tuple, Optional
 import numpy as np
 from pyglet.shapes import Rectangle
 from pyglet.graphics import Batch
+from enum import Enum, auto
+
+class Side(Enum):
+    LEFT = auto()
+    RIGHT = auto()
+
+PADDLE_WIDTH_RATIO = 0.02
+PADDLE_HEIGHT_RATIO = 0.2
+
+PADDLE_SPEED_RATIO = 0.5
+PADDLE_SIDE_BUFFER = 0.05
 
 class Paddle:
-    """A paddle class representing a movable rectangular paddle in a game.
-    
-    The paddle has physics-based movement with position, velocity, acceleration, and jerk.
-    It can interact with balls and screen boundaries.
-    
-    Attributes:
-        pos (np.ndarray): 2D position vector [x, y]
-        vel (np.ndarray): 2D velocity vector [vx, vy]
-        acc (np.ndarray): 2D acceleration vector [ax, ay]
-        move_incr (np.float64): Amount to increment acc by per move
-        decel_rate (float): Deceleration rate
-        width (float): Width of the paddle
-        height (float): Height of the paddle
-        color (Tuple[int, int, int]): RGB color tuple
-        max_acc (np.float64): Maximum acceleration
-        min_acc (np.float64): Minimum acceleration
-        max_vel (np.float64): Maximum velocity
-        min_vel (np.float64): Minimum velocity
-        shape (pyglet.shapes.Rectangle): Pyglet rectangle shape
-    """
-    def __init__(self, x: float, y: float, width: float, height: float, color: Tuple[int, int, int], max_acc: float, min_acc: float, max_vel: float, min_vel: float, decel_rate: float, move_incr: float, batch: Batch):
-        """Initialize a paddle with given position and dimensions.
-
-        Args:
-            x (float): Initial x position
-            y (float): Initial y position
-            width (float): Paddle width
-            height (float): Paddle height
-            color (Tuple[int, int, int]): RGB color tuple
-            max_acc (float): Maximum acceleration
-            min_acc (float): Minimum acceleration
-            max_vel (float): Maximum velocity
-            min_vel (float): Minimum velocity
-            decel_rate (float): Deceleration rate
-            move_incr (float): Amount to increment acc by per move
-            batch (pyglet.graphics.Batch): Batch for drawing
-        """
+    def __init__(self, side: Side, screen_width: int, screen_height: int, color: Tuple[int, int, int], batch: Batch):
+        self.width = screen_width * PADDLE_WIDTH_RATIO
+        self.height = screen_height * PADDLE_HEIGHT_RATIO
+        if side == Side.LEFT:
+            x = screen_width * PADDLE_SIDE_BUFFER
+        else:
+            x = screen_width - (screen_width * PADDLE_SIDE_BUFFER) - self.width
+        y = screen_height / 2 - self.height / 2
         self.pos = np.array([x, y])
-        self.vel = np.float64(0)
-        self.acc = np.float64(0)
-        self.max_acc = np.float64(max_acc)
-        self.min_acc = np.float64(min_acc)
-        self.max_vel = np.float64(max_vel)
-        self.min_vel = np.float64(min_vel)
-        self.decel_rate = np.float64(decel_rate)
-        self.move_incr = np.float64(move_incr)
-        self.width = width
-        self.height = height
+        self.screen_height = screen_height
+        self.screen_width = screen_width
+        self.speed = np.float64(screen_height * PADDLE_SPEED_RATIO)
+        # direction of the paddle 0 = still, 1 = down, -1 = up
+        self.direction = np.float64(0)
+        self.boost = np.float64(0)
         self.color = color
-        self.shape = Rectangle(x, y, width, height, color=color, batch=batch)
-
-    def update_acceleration(self, dt: float):
-        """Update paddle acceleration based on decel_rate.
-        
-        Args:
-            dt (float): Time step delta
-        """
-        # calc the decel to apply
-        decel = np.power(self.decel_rate, dt)
-        
-        # apply the decel to the acc
-        self.acc = np.multiply(self.acc, decel)
-        
-        # ensure the acc is within the min and max acc
-        self.acc = np.maximum(np.minimum(self.acc, self.max_acc), self.min_acc)
-        
-
-    def update_velocity(self, dt: float):
-        """Update paddle velocity based on acceleration.
-        
-        Args:
-            dt (float): Time step delta
-        """
-        # apply the acc to the vel
-        self.vel = np.add(self.vel, np.multiply(self.acc, dt))
-        
-        # ensure the vel is within the min and max vel
-        self.vel = np.maximum(np.minimum(self.vel, self.max_vel), self.min_vel)
+        self.shape = Rectangle(x, y, self.width, self.height, color=self.color, batch=batch)
+        self.origin = np.array([x, y])
         
     def update_position(self, dt: float):
-        """Update paddle position based on velocity.
-        
-        Args:
-            dt (float): Time step delta
-        """
-        self.pos[1] = np.add(self.pos[1], np.multiply(self.vel, dt))
-        
+        self.pos[1] += dt * (self.speed + self.boost) * self.direction
+        # decrement boost by dt if it is greater than 0
+        if self.boost > 0:
+            self.boost -= dt
+        if self.pos[1] < 0:
+            self.pos[1] = 0
+            self.direction = -self.direction
+        elif self.pos[1] + self.height > self.screen_height:
+            self.pos[1] = self.screen_height - self.height
+            self.direction = -self.direction
+
     def update(self, dt: float):
-        """Update paddle physics (acceleration, velocity, position).
-        
-        Args:
-            dt (float): Time step delta
-        """
-        self.update_acceleration(dt)
-        self.update_velocity(dt)
         self.update_position(dt)
         self.update_shape()
         
     def update_shape(self):
         self.shape.x = self.pos[0]
         self.shape.y = self.pos[1]
-        self.shape.width = self.width
-        self.shape.height = self.height
-        self.shape.color = self.color
 
-    def move_up(self, dt: float):
-        self.acc = self.acc - (self.move_incr * dt)
+    def move_up(self):
+        self.direction = -1
+
+    def move_down(self):
+        self.direction = 1
         
-    def move_down(self, dt: float):
-        self.acc = self.acc + (self.move_incr * dt)
+    def stop(self):
+        self.direction = 0
+
+    def reset(self):
+        self.pos = self.origin
+        self.direction = 0
+        self.boost = 0
 
 
 
-class AiPaddle(Paddle):    
-    def move_towards(self, target_pos: np.ndarray, target_vel: np.ndarray, dt: float):
-        # determine if the ball is moving towards the paddle
-        moving_towards = target_vel[0] >= 0
-        
+class AiPaddle(Paddle):
+    def move_towards(self, ball_pos: np.ndarray):
         # center of the paddle
         center_y = (self.pos[1] + (self.height / 2))
         
-        if not moving_towards:
-            # center on the ball
-            if target_pos[1] <= center_y:
-                self.move_up(dt)
-            elif target_pos[1] >= center_y:
-                self.move_down(dt)
-            return
-        
-        # determine where the ball will hit on the y axis at the paddle's x
-        # y = (vy / vx) * (x - x0) + y0
-        hit_y = (target_vel[1] / target_vel[0]) * (self.pos[0] - target_pos[0]) + target_pos[1]
-        will_hit = hit_y >= self.pos[1] and hit_y <= self.pos[1] + self.height
-        
-        if will_hit:
-            # if the ball will hit the paddle, do nothing
-            return
-        elif hit_y < center_y:
-            # if the ball is above the center of the paddle, move up
-            self.move_up(dt)
-        elif hit_y > center_y:
-            # if the ball is below the center of the paddle, move down
-            self.move_down(dt)
-        
-    def update(self, dt: float, ball_pos: np.ndarray, ball_vel: np.ndarray):
-        super().update(dt)
         # move the paddle towards the ball
-        self.move_towards(ball_pos, ball_vel, dt)
+        if ball_pos[1] < center_y:
+            self.move_up()
+        elif ball_pos[1] > center_y:
+            self.move_down()
+        else:
+            self.stop()
+
+    def update(self, dt: float, ball_pos: np.ndarray):
+        self.move_towards(ball_pos)
+        super().update(dt)
         
         
 class HumanPaddle(Paddle):
@@ -163,13 +97,14 @@ class HumanPaddle(Paddle):
         center_y = (self.pos[1] + (self.height / 2))
         
         if finger_pos[1] < center_y - sensitivity:
-            self.move_up(dt)
+            self.move_up()
         elif finger_pos[1] > center_y + sensitivity:
-            self.move_down(dt)
+            self.move_down()
         else:
             # stop moving the paddle
-            self.acc = 0
+            self.stop()
         
     def update(self, dt: float, finger_pos: Optional[Tuple[int, int]], sensitivity: float):
         super().update(dt)
         self.follow_finger(finger_pos, dt, sensitivity)
+        
